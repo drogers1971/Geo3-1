@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Naming Angle Pairs</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+            background-color: #f0f0f0;
+        }
+        #container {
+            width: 740px;
+            position: relative;
+        }
+        canvas {
+            background-color: rgb(240, 240, 240);
+            display: block;
+        }
+        #button-container {
+            position: absolute;
+            top: 365px;
+            left: 0;
+            width: 740px;
+            display: flex;
+            gap: 5px;
+            padding-left: 10px;
+        }
+        .angle-btn {
+            width: 115px;
+            height: 30px;
+            background-color: rgb(220, 220, 220);
+            border: 1px solid #777;
+            font-weight: bold;
+            font-size: 11px;
+            cursor: pointer;
+            box-sizing: border-box;
+        }
+        .angle-btn:disabled {
+            cursor: default;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+
+<div id="container">
+    <canvas id="canvas" width="740" height="400"></canvas>
+    <div id="button-container"></div>
+</div>
+
+<script>
+class Problem {
+    static adj = [12, 13, 24, 34, 56, 57, 68, 78];
+    static alt = [36, 45];
+    static cor = [15, 26, 37, 48];
+    static ssi = [46, 35];
+    static ver = [14, 23, 58, 67];
+    static ext = [18, 27];
+    static numProblems = 6;
+    static problems = [0, 1, 2, 3, 4, 5];
+    static problemIndex = 0;
+
+    static initializeStatic() {
+        for (let k = 0; k < Problem.numProblems * 10; k++) {
+            let i1 = Math.floor(Math.random() * Problem.numProblems);
+            let i2 = Math.floor(Math.random() * Problem.numProblems);
+            let temp = Problem.problems[i1];
+            Problem.problems[i1] = Problem.problems[i2];
+            Problem.problems[i2] = temp;
+        }
+    }
+
+    constructor() {
+        this.problemNumber = Problem.problems[Problem.problemIndex % Problem.numProblems];
+        Problem.problemIndex++;
+
+        this.label = ["*", "1", "2", "3", "4", "5", "6", "7", "8"];
+        this.angleInfo = "";
+        this.qList = [];
+
+        if (this.problemNumber === 0) {
+            this.x = [150, 180, 165, 195, 250, 280, 265, 295];
+            this.y = [95, 95, 118, 118, 245, 245, 268, 268];
+        } else if (this.problemNumber === 1) {
+            this.x = [215, 240, 205, 230, 165, 190, 155, 180];
+            this.y = [120, 120, 143, 143, 220, 220, 243, 243];
+        } else if (this.problemNumber === 2) {
+            this.x = [185, 207, 185, 207, 185, 207, 185, 207];
+            this.y = [125, 112, 150, 137, 215, 202, 240, 227];
+        } else if (this.problemNumber === 3) {
+            this.x = [87, 87, 107, 107, 287, 287, 307, 307];
+            this.y = [235, 208, 228, 201, 184, 157, 177, 150];
+        } else if (this.problemNumber === 4) {
+            this.x = [71, 80, 91, 100, 255, 264, 275, 284];
+            this.y = [186, 161, 194, 169, 243, 218, 251, 226];
+        } else {
+            this.x = [110, 105, 132, 125, 317, 312, 339, 332];
+            this.y = [175, 150, 178, 152, 210, 185, 213, 187];
+        }
+
+        // Shuffle labels
+        for (let k = 0; k < 30; k++) {
+            let i1 = 1 + Math.floor(Math.random() * (this.label.length - 1));
+            let i2 = 1 + Math.floor(Math.random() * (this.label.length - 1));
+            let temp = this.label[i1];
+            this.label[i1] = this.label[i2];
+            this.label[i2] = temp;
+        }
+
+        const getRandom = arr => arr[Math.floor(Math.random() * arr.length)];
+        this.qList.push(getRandom(Problem.adj) + "Linear Pair");
+        this.qList.push(getRandom(Problem.ver) + "Vertical");
+        this.qList.push(Problem.alt[Math.floor(Math.random() * 2)] + "Alternate Interior");
+        this.qList.push(Problem.ext[Math.floor(Math.random() * 2)] + "Alternate Exterior");
+        this.qList.push(Problem.ssi[0] + "Same Side Interior");
+        this.qList.push(Problem.ssi[1] + "Same Side Interior");
+
+        let exclude = Math.floor(Math.random() * 4);
+        for (let k = 0; k < 4; k++) {
+            if (k !== exclude) {
+                this.qList.push(Problem.cor[k] + "Corresponding");
+            }
+        }
+    }
+
+    nextQuestion() {
+        let index = Math.floor(Math.random() * this.qList.length);
+        let s = this.qList.splice(index, 1)[0];
+        let n = parseInt(s.substring(0, 2), 10);
+        let a = parseInt(this.label[Math.floor(n / 10)], 10);
+        let b = parseInt(this.label[n % 10], 10);
+        this.angleInfo = "" + Math.min(a, b) + Math.max(a, b) + s.substring(2);
+        return this.angleInfo;
+    }
+
+    hasMoreQuestions() {
+        return this.qList.length > 0;
+    }
+
+    draw(ctx) {
+        ctx.strokeStyle = "black";
+        ctx.lineWidth = 1;
+
+        const drawLine = (x1, y1, x2, y2) => {
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+        };
+
+        if (this.problemNumber === 0) {
+            drawLine(25, 100, 400, 100);
+            drawLine(25, 101, 400, 101);
+            drawLine(25, 250, 400, 250);
+            drawLine(25, 251, 400, 251);
+            drawLine(125, 25, 325, 325);
+            drawLine(126, 25, 326, 325);
+        } else if (this.problemNumber === 1) {
+            drawLine(50, 125, 350, 125);
+            drawLine(50, 126, 350, 126);
+            drawLine(50, 225, 350, 225);
+            drawLine(50, 226, 350, 226);
+            drawLine(150, 275, 250, 75);
+            drawLine(151, 275, 251, 75);
+        } else if (this.problemNumber === 2) {
+            drawLine(25, 225, 375, 25);
+            drawLine(25, 226, 375, 26);
+            drawLine(50, 300, 400, 100);
+            drawLine(50, 301, 400, 101);
+            drawLine(200, 50, 200, 300);
+            drawLine(201, 50, 201, 300);
+        } else if (this.problemNumber === 3) {
+            drawLine(100, 50, 100, 300);
+            drawLine(101, 50, 101, 300);
+            drawLine(300, 50, 300, 300);
+            drawLine(301, 50, 301, 300);
+            drawLine(50, 225, 350, 150);
+            drawLine(50, 224, 350, 149);
+        } else if (this.problemNumber === 4) {
+            drawLine(50, 300, 125, 50);
+            drawLine(51, 300, 126, 50);
+            drawLine(250, 300, 325, 50);
+            drawLine(251, 300, 326, 50);
+            drawLine(25, 150, 350, 250);
+            drawLine(25, 151, 350, 251);
+        } else {
+            drawLine(100, 50, 150, 300);
+            drawLine(101, 50, 151, 300);
+            drawLine(300, 50, 350, 300);
+            drawLine(301, 50, 351, 300);
+            drawLine(75, 150, 375, 200);
+            drawLine(75, 151, 375, 201);
+        }
+
+        ctx.font = "bold 16px sans-serif";
+        for (let k = 0; k < this.x.length; k++) {
+            let ch = this.label[k + 1].charAt(0);
+            if (ch === this.angleInfo.charAt(0) || ch === this.angleInfo.charAt(1)) {
+                ctx.fillStyle = "red";
+            } else {
+                ctx.fillStyle = "black";
+            }
+            ctx.fillText(this.label[k + 1], this.x[k], this.y[k]);
+        }
+    }
+}
+
+class AngleNames {
+    static list = [
+        "Linear Pair", "Alternate Interior", "Corresponding",
+        "Same Side Interior", "Vertical", "Alternate Exterior"
+    ];
+
+    static encourageList = [
+        "Good Job!", "Nice Job!", "Fantastic!", "Supergood!", "Excellent!",
+        "Way To Go!", "Awesome!", "Terrific!", "Marvelous!", "Wonderful!",
+        "Tremendous!", "Superior!", "Extraordinary!", "Smashing!",
+        "Remarkable!", "Fine Work!", "Great Job!"
+    ];
+
+    constructor() {
+        this.canvas = document.getElementById('canvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.buttonContainer = document.getElementById('button-container');
+
+        this.message = "";
+        this.encourage = "";
+        this.secret = "";
+        this.angA = '';
+        this.angB = '';
+        this.answered = 0;
+        this.correct = 0;
+        this.currStreak = 0;
+        this.longStreak = 0;
+        this.percent = 0;
+        this.lastCorrect = true;
+        this.correcting = false;
+        this.sleeping = false;
+        this.pList = [];
+        this.buttons = [];
+
+        Problem.initializeStatic();
+        this.shuffleEncouragements();
+        this.createButtons();
+
+        this.prob = new Problem();
+        this.chooseQuestion();
+        this.repaint();
+    }
+
+    shuffleEncouragements() {
+        for (let k = 0; k < AngleNames.encourageList.length * 10; k++) {
+            let i1 = Math.floor(Math.random() * AngleNames.encourageList.length);
+            let i2 = Math.floor(Math.random() * AngleNames.encourageList.length);
+            let temp = AngleNames.encourageList[i1];
+            AngleNames.encourageList[i1] = AngleNames.encourageList[i2];
+            AngleNames.encourageList[i2] = temp;
+        }
+    }
+
+    createButtons() {
+        AngleNames.list.forEach(label => {
+            let btn = document.createElement('button');
+            btn.className = 'angle-btn';
+            btn.textContent = label;
+            btn.addEventListener('click', () => this.actionPerformed(label));
+            this.buttonContainer.appendChild(btn);
+            this.buttons.push(btn);
+        });
+    }
+
+    chooseQuestion() {
+        if (!this.prob.hasMoreQuestions()) {
+            this.prob = new Problem();
+        }
+        let word = this.prob.nextQuestion();
+        this.secret = word.substring(2);
+        this.angA = word.charAt(0);
+        this.angB = word.charAt(1);
+    }
+
+    drawQuestion(ctx) {
+        ctx.fillStyle = "black";
+        ctx.font = "bold 24px sans-serif";
+        let yc = 350;
+        ctx.fillText("What are   " + this.angA + " and   " + this.angB + " called?", 10, yc + 2);
+
+        ctx.strokeStyle = "black";
+        ctx.lineWidth = 1;
+        const drawLine = (x1, y1, x2, y2) => {
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+        };
+
+        drawLine(115, yc + 0, 130, yc);
+        drawLine(115, yc + 1, 130, yc + 1);
+        drawLine(115, yc + 1, 130, yc - 15);
+        drawLine(114, yc + 1, 129, yc - 15);
+
+        drawLine(198, yc + 0, 213, yc);
+        drawLine(198, yc + 1, 213, yc + 1);
+        drawLine(198, yc + 1, 213, yc - 15);
+        drawLine(197, yc + 1, 212, yc - 15);
+    }
+
+    drawStats(ctx) {
+        for (let k = 32; k > 2; k -= 1) {
+            let c = 256 - k * 8;
+            ctx.strokeStyle = `rgb(${c}, ${c}, ${c})`;
+            ctx.strokeRect(465 + k, 10 + k, 250 - 2 * k, 350 - 2 * k);
+        }
+
+        ctx.fillStyle = "black";
+        ctx.fillRect(497, 42, 186, 286);
+
+        ctx.fillStyle = "rgb(0, 200, 125)";
+        ctx.font = "bold 20px monospace";
+        ctx.fillText("Statistics", 500, 50);
+        ctx.fillText("Percent Correct", 500, 140);
+
+        ctx.font = "12px monospace";
+        ctx.fillText("     Attempted: " + this.answered, 505, 70);
+        ctx.fillText("       Correct: " + this.correct, 505, 82);
+        ctx.fillText("Current Streak: " + this.currStreak, 505, 106);
+        ctx.fillText("Longest Streak: " + this.longStreak, 505, 118);
+        ctx.fillText("History ( % Correct )", 525, 226);
+
+        ctx.font = "12px sans-serif";
+        ctx.fillText("75%", 495, 260);
+        ctx.fillText("50%", 495, 285);
+        ctx.fillText("25%", 495, 310);
+
+        // Arc & Pie slice
+        ctx.beginPath();
+        ctx.arc(529.5, 179.5, 29.5, 0, 2 * Math.PI);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(530, 180);
+        let startAngle = -Math.PI / 2;
+        let endAngle = startAngle + (2 * Math.PI * this.percent / 100);
+        ctx.arc(530, 180, 30, startAngle, endAngle);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.font = "44px sans-serif";
+        ctx.fillText(this.percent + "%", 575, 200);
+
+        ctx.strokeStyle = "rgb(0, 100, 63)";
+        ctx.strokeRect(525, 230, 150, 100);
+        ctx.strokeRect(525, 255, 150, 50);
+
+        ctx.beginPath();
+        ctx.moveTo(525, 280);
+        ctx.lineTo(675, 280);
+        ctx.stroke();
+
+        let xc = 525;
+        for (let k = 1; k < this.pList.length; k++) {
+            ctx.strokeStyle = "yellow";
+            ctx.beginPath();
+            ctx.moveTo(xc, 330 - this.pList[k - 1]);
+            ctx.lineTo(xc + 6, 330 - this.pList[k]);
+            ctx.stroke();
+            xc += 6;
+        }
+    }
+
+    repaint() {
+        this.ctx.fillStyle = "rgb(240, 240, 240)";
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        this.prob.draw(this.ctx);
+        this.drawQuestion(this.ctx);
+        this.drawStats(this.ctx);
+
+        if (this.sleeping) {
+            this.ctx.fillStyle = "rgba(255, 0, 255, 0.49)";
+            this.ctx.font = "bold 64px sans-serif";
+            this.ctx.fillText(this.encourage, 5, 200);
+        }
+    }
+
+    actionPerformed(cmd) {
+        this.buttons.forEach(b => b.disabled = true);
+        this.message = cmd;
+
+        if (!this.correcting) {
+            if (this.message === this.secret) {
+                this.correct++;
+                this.currStreak++;
+                if (this.currStreak > this.longStreak) {
+                    this.longStreak = this.currStreak;
+                }
+                this.lastCorrect = true;
+                this.encourage = AngleNames.encourageList[this.correct % AngleNames.encourageList.length];
+                if (this.correct % AngleNames.encourageList.length === 0) {
+                    this.shuffleEncouragements();
+                }
+                this.correcting = false;
+            } else {
+                this.lastCorrect = false;
+                this.currStreak = 0;
+                this.correcting = true;
+                this.encourage = "Try Again!";
+            }
+            this.answered++;
+            this.percent = Math.round(100.0 * this.correct / this.answered);
+            if (this.pList.length > 25) {
+                this.pList.shift();
+            }
+            this.pList.push(this.percent);
+        } else {
+            if (this.message === this.secret) {
+                this.correcting = false;
+                this.encourage = "       O.K.";
+            } else {
+                this.correcting = true;
+            }
+        }
+
+        this.sleeping = true;
+        this.repaint();
+
+        setTimeout(() => {
+            this.buttons.forEach(b => b.disabled = false);
+            this.sleeping = false;
+            if (this.message === this.secret) {
+                this.chooseQuestion();
+            }
+            this.repaint();
+        }, 900);
+    }
+}
+
+window.onload = () => {
+    new AngleNames();
+};
+</script>
+
+</body>
+</html>
